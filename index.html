@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>AR Menu Demo</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+        :root {
+            --brand: #b5121b;
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: system-ui, sans-serif;
+        }
+
+        #brandbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            background: var(--brand);
+            color: #fff;
+            text-align: center;
+            padding: 12px;
+            font-weight: 700;
+        }
+
+        #brandbar small {
+            display: block;
+            font-weight: 400;
+            font-size: 12px;
+            opacity: .85;
+        }
+
+        #hint {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            background: rgba(0, 0, 0, .65);
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        #dishcard {
+            position: fixed;
+            left: 12px;
+            right: 12px;
+            bottom: 16px;
+            z-index: 10;
+            background: #fff;
+            border-radius: 16px;
+            padding: 14px 16px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, .3);
+            transform: translateY(140%);
+            transition: transform .35s ease;
+        }
+
+        #dishcard.show {
+            transform: translateY(0);
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .price {
+            font-weight: 700;
+            color: var(--brand);
+            font-size: 18px;
+        }
+
+        #dishcard p {
+            margin: 6px 0 10px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 11px;
+            background: #fff3cd;
+            color: #7a5a00;
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        #orderBtn {
+            width: 100%;
+            border: 0;
+            border-radius: 10px;
+            padding: 12px;
+            background: var(--brand);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="brandbar">Global Fusion Bistro<small>AR Menu · Point your camera at the menu card</small></div>
+    <div id="hint">📷 Scan the menu card to see the dish in 3D</div>
+
+    <div id="dishcard">
+        <span class="badge">✨ Actual portion size</span>
+        <div class="row">
+            <h3>Peproni Pizza</h3><span class="price">$17.95</span>
+        </div>
+        <p>Classic pepperoni pizza with mozzarella and parmesan cheese.</p>
+        <button id="orderBtn">Add to Order</button>
+    </div>
+
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001"
+        color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights: true" vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false">
+        <a-assets>
+            <a-asset-item id="dishModel" src="./pizza.glb"></a-asset-item>
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        <a-entity light="type: ambient; intensity: 1.2"></a-entity>
+        <a-entity light="type: directional; intensity: 1.5" position="0 1 1"></a-entity>
+
+        <a-entity id="target0" mindar-image-target="targetIndex: 0">
+            <a-circle radius="0.32" position="0 0 0.001"
+                material="color: #000; opacity: 0.25; transparent: true"></a-circle>
+            <a-gltf-model id="dish" src="#dishModel" scale="0.3 0.3 0.3" position="0 0 0.05" rotation="90 0 0"
+                animation="property: rotation; from: 90 0 0; to: 90 360 0; loop: true; dur: 12000; easing: linear"
+                animation__pop="property: scale; from: 0 0 0; to: 0.3 0.3 0.3; dur: 600; easing: easeOutBack; startEvents: targetFound">
+            </a-gltf-model>
+        </a-entity>
+    </a-scene>
+
+    <script>
+        const target = document.querySelector('#target0');
+        const dish = document.querySelector('#dish');
+        const card = document.querySelector('#dishcard');
+        const hint = document.querySelector('#hint');
+
+        target.addEventListener('targetFound', () => {
+            dish.emit('targetFound');
+            card.classList.add('show');
+            hint.style.display = 'none';
+        });
+        target.addEventListener('targetLost', () => {
+            card.classList.remove('show');
+            hint.style.display = 'block';
+        });
+        document.querySelector('#orderBtn').addEventListener('click', () => alert('✅ Added to your order! (Demo)'));
+    </script>
+</body>
+
+</html>
