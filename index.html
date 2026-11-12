@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>AR Menu – Demo</title>
+  <title>AR Menu Card – Demo</title>
 
   <!-- A-Frame + MindAR -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -186,10 +186,10 @@
   <!-- ====== EDIT RESTAURANT NAME HERE ====== -->
   <div id="brandbar">
     Global Fusion Bistro
-    <small>AR Menu · Point your camera at the logo</small>
+    <small>AR Menu · Point your camera at the Logo</small>
   </div>
 
-  <div id="hint">📷 Scan the logo to see the dish in 3D</div>
+  <div id="hint">📷 Scan the Logo to see the dish in 3D</div>
 
   <!-- Zoom controls (also supports pinch with two fingers) -->
   <div id="zoomControls">
@@ -200,7 +200,7 @@
 
   <!-- ====== EDIT DISH DETAILS HERE ====== -->
   <div id="dishcard">
-    <span class="badge">Actual portion size</span>
+    <span class="badge">✨ Actual portion size</span>
     <div class="row">
       <h3 id="dishName">Pepperoni Pizza</h3>
       <span class="price" id="dishPrice">$17.25</span>
@@ -231,12 +231,6 @@
       <a-circle radius="0.32" rotation="0 0 0" position="0 0 0.001"
         material="color: #000; opacity: 0.25; transparent: true"></a-circle>
 
-      <!--
-        TUNE THESE 3 VALUES FOR YOUR MODEL:
-        - scale: 1 unit = width of the menu image. Start at 0.3 and adjust.
-        - position z: lifts the dish off the paper.
-        - rotation: "90 0 0" stands the dish upright on a flat-lying menu.
-      -->
       <!-- Zoom wrapper: pinch / +/- buttons change THIS entity's scale -->
       <a-entity id="zoomer" scale="1 1 1">
         <a-gltf-model id="dish" src="#dishModel" scale="0.3 0.3 0.3" position="0 0 0.05" rotation="90 0 0"
@@ -257,15 +251,30 @@
     const zoomText = document.querySelector('#zoomLevel');
 
     target.addEventListener('targetFound', () => {
-      dish.emit('targetFound');          // replay the "pop" animation
+      dish.emit('targetFound');          
       card.classList.add('show');
       controls.classList.add('show');
       hint.style.display = 'none';
     });
 
+    const lastPose = new AFRAME.THREE.Matrix4();
+    let hasPose = false;
+
+    target.addEventListener('targetUpdate', () => {
+      // fires before MindAR applies the new matrix, so this is the last good pose
+      if (target.object3D.visible) {
+        lastPose.copy(target.object3D.matrix);
+        hasPose = true;
+      }
+    });
+
     target.addEventListener('targetLost', () => {
-      setTimeout(() => { target.object3D.visible = true; }, 0);
-      hint.textContent = 'Dish pinned · scan the menu again to re-place it';
+      setTimeout(() => {
+        if (!hasPose) return;
+        target.object3D.matrix.copy(lastPose);
+        target.object3D.visible = true;
+      }, 0);
+      hint.textContent = 'Dish pinned · scan the Logo again to re-place it';
       hint.style.bottom = '200px';        // sit above the dish card
       hint.style.display = 'block';
       setTimeout(() => { hint.style.display = 'none'; }, 2500);
