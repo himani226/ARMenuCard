@@ -1,88 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>AR Menu – Demo</title>
 
-  <!-- A-Frame + MindAR (pinned, known-compatible versions) -->
+  <!-- A-Frame + MindAR -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    /* ====== EDIT BRAND COLORS HERE ====== */
-    :root { --brand: #b5121b; --brand-dark: #7a0b11; --text: #1d1d1d; }
+    /* ====== BRAND COLORS HERE ====== */
+    :root {
+      --brand: #b5121b;
+      --brand-dark: #7a0b11;
+      --text: #1d1d1d;
+    }
 
-    html, body { margin: 0; height: 100%; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; }
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
 
     /* Top brand bar */
     #brandbar {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 10;
-      background: var(--brand); color: #fff; text-align: center;
-      padding: 12px 8px; font-weight: 700; letter-spacing: .5px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      background: var(--brand);
+      color: #fff;
+      text-align: center;
+      padding: 12px 8px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
     }
-    #brandbar small { display: block; font-weight: 400; opacity: .85; font-size: 12px; }
+
+    #brandbar small {
+      display: block;
+      font-weight: 400;
+      opacity: .85;
+      font-size: 12px;
+    }
 
     /* Hint shown while scanning */
     #hint {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 10;
-      background: rgba(0,0,0,.65); color: #fff; padding: 10px 16px; border-radius: 20px;
-      font-size: 14px; white-space: nowrap;
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(0, 0, 0, .65);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      white-space: nowrap;
     }
 
     /* Dish card shown when menu is detected */
     #dishcard {
-      position: fixed; left: 12px; right: 12px; bottom: 16px; z-index: 10;
-      background: #fff; color: var(--text); border-radius: 16px; padding: 14px 16px;
-      box-shadow: 0 6px 24px rgba(0,0,0,.3);
-      transform: translateY(140%); transition: transform .35s ease;
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 16px;
+      z-index: 10;
+      background: #fff;
+      color: var(--text);
+      border-radius: 16px;
+      padding: 14px 16px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .3);
+      transform: translateY(140%);
+      transition: transform .35s ease;
     }
-    #dishcard.show { transform: translateY(0); }
-    #dishcard .row { display: flex; justify-content: space-between; align-items: baseline; }
-    #dishcard h3 { margin: 0; font-size: 18px; }
-    #dishcard .price { font-weight: 700; color: var(--brand); font-size: 18px; }
-    #dishcard p { margin: 6px 0 10px; font-size: 13px; color: #555; }
+
+    #dishcard.show {
+      transform: translateY(0);
+    }
+
+    #dishcard .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    #dishcard h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    #dishcard .price {
+      font-weight: 700;
+      color: var(--brand);
+      font-size: 18px;
+    }
+
+    #dishcard p {
+      margin: 6px 0 10px;
+      font-size: 13px;
+      color: #555;
+    }
+
     #dishcard .badge {
-      display: inline-block; font-size: 11px; background: #fff3cd; color: #7a5a00;
-      padding: 3px 8px; border-radius: 10px; margin-bottom: 8px;
+      display: inline-block;
+      font-size: 11px;
+      background: #fff3cd;
+      color: #7a5a00;
+      padding: 3px 8px;
+      border-radius: 10px;
+      margin-bottom: 8px;
     }
+
     #orderBtn {
-      width: 100%; border: 0; border-radius: 10px; padding: 12px;
-      background: var(--brand); color: #fff; font-size: 16px; font-weight: 700;
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px;
+      background: var(--brand);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
     }
-    #orderBtn:active { background: var(--brand-dark); }
+
+    #orderBtn:active {
+      background: var(--brand-dark);
+    }
 
     /* Zoom buttons */
     #zoomControls {
-      position: fixed; right: 16px; top: 50%; transform: translateY(-50%); z-index: 10;
-      display: none; flex-direction: column; gap: 10px;
+      position: fixed;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
     }
-    #zoomControls.show { display: flex; }
+
+    #zoomControls.show {
+      display: flex;
+    }
+
     #zoomControls button {
-      width: 48px; height: 48px; border-radius: 50%; border: 0;
-      background: rgba(255,255,255,.95); color: var(--brand);
-      font-size: 26px; font-weight: 700; box-shadow: 0 3px 10px rgba(0,0,0,.3);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 0;
+      background: rgba(255, 255, 255, .95);
+      color: var(--brand);
+      font-size: 26px;
+      font-weight: 700;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, .3);
     }
-    #zoomControls button:active { transform: scale(.92); }
+
+    #zoomControls button:active {
+      transform: scale(.92);
+    }
+
     #zoomLevel {
-      text-align: center; font-size: 12px; color: #fff; font-weight: 600;
-      background: rgba(0,0,0,.55); border-radius: 10px; padding: 3px 0;
+      text-align: center;
+      font-size: 12px;
+      color: #fff;
+      font-weight: 600;
+      background: rgba(0, 0, 0, .55);
+      border-radius: 10px;
+      padding: 3px 0;
     }
 
     /* Hide MindAR's default scanning overlay text clash on small screens */
-    .mindar-ui-overlay { z-index: 5 !important; }
+    .mindar-ui-overlay {
+      z-index: 5 !important;
+    }
   </style>
 </head>
+
 <body>
 
   <!-- ====== EDIT RESTAURANT NAME HERE ====== -->
   <div id="brandbar">
     Global Fusion Bistro
-    <small>AR Menu · Point your camera at the menu card</small>
+    <small>AR Menu · Point your camera at the logo</small>
   </div>
 
-  <div id="hint">📷 Scan the menu card to see the dish in 3D</div>
+  <div id="hint">📷 Scan the logo to see the dish in 3D</div>
 
   <!-- Zoom controls (also supports pinch with two fingers) -->
   <div id="zoomControls">
@@ -93,20 +200,18 @@
 
   <!-- ====== EDIT DISH DETAILS HERE ====== -->
   <div id="dishcard">
-    <span class="badge">✨ Actual portion size</span>
+    <span class="badge">Actual portion size</span>
     <div class="row">
-      <h3 id="dishName">Peproni Pizza</h3>
-      <span class="price" id="dishPrice">$17.95</span>
+      <h3 id="dishName">Pepperoni Pizza</h3>
+      <span class="price" id="dishPrice">$17.25</span>
     </div>
-    <p id="dishDesc">Classic pepperoni pizza with mozzarella and parmesan cheese.</p>
+    <p id="dishDesc">A delicious pepperoni pizza with cheese and pepperoni.</p>
     <button id="orderBtn">Add to Order</button>
   </div>
 
   <a-scene
     mindar-image="imageTargetSrc: ./targets.mind; uiScanning: no; uiLoading: yes; filterMinCF: 0.0001; filterBeta: 0.001"
-    color-space="sRGB"
-    renderer="colorManagement: true, physicallyCorrectLights: true"
-    vr-mode-ui="enabled: false"
+    color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights: true" vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
 
     <a-assets>
@@ -124,7 +229,7 @@
     <a-entity id="target0" mindar-image-target="targetIndex: 0">
       <!-- Soft shadow disc under the dish -->
       <a-circle radius="0.32" rotation="0 0 0" position="0 0 0.001"
-                material="color: #000; opacity: 0.25; transparent: true"></a-circle>
+        material="color: #000; opacity: 0.25; transparent: true"></a-circle>
 
       <!--
         TUNE THESE 3 VALUES FOR YOUR MODEL:
@@ -134,12 +239,7 @@
       -->
       <!-- Zoom wrapper: pinch / +/- buttons change THIS entity's scale -->
       <a-entity id="zoomer" scale="1 1 1">
-        <a-gltf-model
-          id="dish"
-          src="#dishModel"
-          scale="0.3 0.3 0.3"
-          position="0 0 0.05"
-          rotation="90 0 0"
+        <a-gltf-model id="dish" src="#dishModel" scale="0.3 0.3 0.3" position="0 0 0.05" rotation="90 0 0"
           animation__pop="property: scale; from: 0 0 0; to: 0.3 0.3 0.3; dur: 600; easing: easeOutBack; startEvents: targetFound">
         </a-gltf-model>
       </a-entity>
@@ -148,11 +248,11 @@
 
   <script>
     const target = document.querySelector('#target0');
-    const dish   = document.querySelector('#dish');
-    const card   = document.querySelector('#dishcard');
-    const hint   = document.querySelector('#hint');
+    const dish = document.querySelector('#dish');
+    const card = document.querySelector('#dishcard');
+    const hint = document.querySelector('#hint');
 
-    const zoomer   = document.querySelector('#zoomer');
+    const zoomer = document.querySelector('#zoomer');
     const controls = document.querySelector('#zoomControls');
     const zoomText = document.querySelector('#zoomLevel');
 
@@ -164,9 +264,12 @@
     });
 
     target.addEventListener('targetLost', () => {
-      card.classList.remove('show');
-      controls.classList.remove('show');
+      setTimeout(() => { target.object3D.visible = true; }, 0);
+      hint.textContent = 'Dish pinned · scan the menu again to re-place it';
+      hint.style.bottom = '200px';        // sit above the dish card
       hint.style.display = 'block';
+      setTimeout(() => { hint.style.display = 'none'; }, 2500);
+      // card + zoom controls stay visible
     });
 
     /* ===== ZOOM ===== */
@@ -180,7 +283,7 @@
     }
 
     // +/- buttons
-    document.querySelector('#zoomIn').addEventListener('click',  () => setZoom(zoom + 0.25));
+    document.querySelector('#zoomIn').addEventListener('click', () => setZoom(zoom + 0.25));
     document.querySelector('#zoomOut').addEventListener('click', () => setZoom(zoom - 0.25));
 
     // Pinch with two fingers
@@ -212,8 +315,9 @@
     });
 
     document.querySelector('#orderBtn').addEventListener('click', () => {
-      alert('✅ Added to your order! (Demo)');
+      alert('Dish added to your order! (Demo)');
     });
   </script>
 </body>
+
 </html>
