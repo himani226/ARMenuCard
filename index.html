@@ -1,174 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <title>AR Menu Demo</title>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <style>
-        :root {
-            --brand: #b5121b;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>AR Menu – Demo</title>
 
-        html,
-        body {
-            margin: 0;
-            height: 100%;
-            overflow: hidden;
-            font-family: system-ui, sans-serif;
-        }
+  <!-- A-Frame + MindAR (pinned, known-compatible versions) -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
-        #brandbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 10;
-            background: var(--brand);
-            color: #fff;
-            text-align: center;
-            padding: 12px;
-            font-weight: 700;
-        }
+  <style>
+    /* ====== EDIT BRAND COLORS HERE ====== */
+    :root { --brand: #b5121b; --brand-dark: #7a0b11; --text: #1d1d1d; }
 
-        #brandbar small {
-            display: block;
-            font-weight: 400;
-            font-size: 12px;
-            opacity: .85;
-        }
+    html, body { margin: 0; height: 100%; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; }
 
-        #hint {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-            background: rgba(0, 0, 0, .65);
-            color: #fff;
-            padding: 10px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            white-space: nowrap;
-        }
+    /* Top brand bar */
+    #brandbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+      background: var(--brand); color: #fff; text-align: center;
+      padding: 12px 8px; font-weight: 700; letter-spacing: .5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+    #brandbar small { display: block; font-weight: 400; opacity: .85; font-size: 12px; }
 
-        #dishcard {
-            position: fixed;
-            left: 12px;
-            right: 12px;
-            bottom: 16px;
-            z-index: 10;
-            background: #fff;
-            border-radius: 16px;
-            padding: 14px 16px;
-            box-shadow: 0 6px 24px rgba(0, 0, 0, .3);
-            transform: translateY(140%);
-            transition: transform .35s ease;
-        }
+    /* Hint shown while scanning */
+    #hint {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 10;
+      background: rgba(0,0,0,.65); color: #fff; padding: 10px 16px; border-radius: 20px;
+      font-size: 14px; white-space: nowrap;
+    }
 
-        #dishcard.show {
-            transform: translateY(0);
-        }
+    /* Dish card shown when menu is detected */
+    #dishcard {
+      position: fixed; left: 12px; right: 12px; bottom: 16px; z-index: 10;
+      background: #fff; color: var(--text); border-radius: 16px; padding: 14px 16px;
+      box-shadow: 0 6px 24px rgba(0,0,0,.3);
+      transform: translateY(140%); transition: transform .35s ease;
+    }
+    #dishcard.show { transform: translateY(0); }
+    #dishcard .row { display: flex; justify-content: space-between; align-items: baseline; }
+    #dishcard h3 { margin: 0; font-size: 18px; }
+    #dishcard .price { font-weight: 700; color: var(--brand); font-size: 18px; }
+    #dishcard p { margin: 6px 0 10px; font-size: 13px; color: #555; }
+    #dishcard .badge {
+      display: inline-block; font-size: 11px; background: #fff3cd; color: #7a5a00;
+      padding: 3px 8px; border-radius: 10px; margin-bottom: 8px;
+    }
+    #orderBtn {
+      width: 100%; border: 0; border-radius: 10px; padding: 12px;
+      background: var(--brand); color: #fff; font-size: 16px; font-weight: 700;
+    }
+    #orderBtn:active { background: var(--brand-dark); }
 
-        .row {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-        }
+    /* Zoom buttons */
+    #zoomControls {
+      position: fixed; right: 16px; top: 50%; transform: translateY(-50%); z-index: 10;
+      display: none; flex-direction: column; gap: 10px;
+    }
+    #zoomControls.show { display: flex; }
+    #zoomControls button {
+      width: 48px; height: 48px; border-radius: 50%; border: 0;
+      background: rgba(255,255,255,.95); color: var(--brand);
+      font-size: 26px; font-weight: 700; box-shadow: 0 3px 10px rgba(0,0,0,.3);
+    }
+    #zoomControls button:active { transform: scale(.92); }
+    #zoomLevel {
+      text-align: center; font-size: 12px; color: #fff; font-weight: 600;
+      background: rgba(0,0,0,.55); border-radius: 10px; padding: 3px 0;
+    }
 
-        h3 {
-            margin: 0;
-            font-size: 18px;
-        }
-
-        .price {
-            font-weight: 700;
-            color: var(--brand);
-            font-size: 18px;
-        }
-
-        #dishcard p {
-            margin: 6px 0 10px;
-            font-size: 13px;
-            color: #555;
-        }
-
-        .badge {
-            display: inline-block;
-            font-size: 11px;
-            background: #fff3cd;
-            color: #7a5a00;
-            padding: 3px 8px;
-            border-radius: 10px;
-            margin-bottom: 8px;
-        }
-
-        #orderBtn {
-            width: 100%;
-            border: 0;
-            border-radius: 10px;
-            padding: 12px;
-            background: var(--brand);
-            color: #fff;
-            font-size: 16px;
-            font-weight: 700;
-        }
-    </style>
+    /* Hide MindAR's default scanning overlay text clash on small screens */
+    .mindar-ui-overlay { z-index: 5 !important; }
+  </style>
 </head>
-
 <body>
-    <div id="brandbar">Global Fusion Bistro<small>AR Menu · Point your camera at the menu card</small></div>
-    <div id="hint">📷 Scan the menu card to see the dish in 3D</div>
 
-    <div id="dishcard">
-        <span class="badge">✨ Actual portion size</span>
-        <div class="row">
-            <h3>Peproni Pizza</h3><span class="price">$17.95</span>
-        </div>
-        <p>Classic pepperoni pizza with mozzarella and parmesan cheese.</p>
-        <button id="orderBtn">Add to Order</button>
+  <!-- ====== EDIT RESTAURANT NAME HERE ====== -->
+  <div id="brandbar">
+    Global Fusion Bistro
+    <small>AR Menu · Point your camera at the menu card</small>
+  </div>
+
+  <div id="hint">📷 Scan the menu card to see the dish in 3D</div>
+
+  <!-- Zoom controls (also supports pinch with two fingers) -->
+  <div id="zoomControls">
+    <button id="zoomIn" aria-label="Zoom in">+</button>
+    <div id="zoomLevel">1.0x</div>
+    <button id="zoomOut" aria-label="Zoom out">−</button>
+  </div>
+
+  <!-- ====== EDIT DISH DETAILS HERE ====== -->
+  <div id="dishcard">
+    <span class="badge">✨ Actual portion size</span>
+    <div class="row">
+      <h3 id="dishName">Peproni Pizza</h3>
+      <span class="price" id="dishPrice">$17.95</span>
     </div>
+    <p id="dishDesc">Classic pepperoni pizza with mozzarella and parmesan cheese.</p>
+    <button id="orderBtn">Add to Order</button>
+  </div>
 
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001"
-        color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights: true" vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: false">
-        <a-assets>
-            <a-asset-item id="dishModel" src="./pizza.glb"></a-asset-item>
-        </a-assets>
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; uiScanning: no; uiLoading: yes; filterMinCF: 0.0001; filterBeta: 0.001"
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
 
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-        <a-entity light="type: ambient; intensity: 1.2"></a-entity>
-        <a-entity light="type: directional; intensity: 1.5" position="0 1 1"></a-entity>
+    <a-assets>
+      <!-- Put your 3D model (GLB) next to this file and name it dish.glb -->
+      <a-asset-item id="dishModel" src="./pizza.glb"></a-asset-item>
+    </a-assets>
 
-        <a-entity id="target0" mindar-image-target="targetIndex: 0">
-            <a-circle radius="0.32" position="0 0 0.001"
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <!-- Lighting so food models don't look flat/dark -->
+    <a-entity light="type: ambient; intensity: 1.2"></a-entity>
+    <a-entity light="type: directional; intensity: 1.5" position="0 1 1"></a-entity>
+
+    <!-- Target 0 = first image you compiled -->
+    <a-entity id="target0" mindar-image-target="targetIndex: 0">
+      <!-- Soft shadow disc under the dish -->
+      <a-circle radius="0.32" rotation="0 0 0" position="0 0 0.001"
                 material="color: #000; opacity: 0.25; transparent: true"></a-circle>
-            <a-gltf-model id="dish" src="#dishModel" scale="0.3 0.3 0.3" position="0 0 0.05" rotation="90 0 0"
-                animation="property: rotation; from: 90 0 0; to: 90 360 0; loop: true; dur: 12000; easing: linear"
-                animation__pop="property: scale; from: 0 0 0; to: 0.3 0.3 0.3; dur: 600; easing: easeOutBack; startEvents: targetFound">
-            </a-gltf-model>
-        </a-entity>
-    </a-scene>
 
-    <script>
-        const target = document.querySelector('#target0');
-        const dish = document.querySelector('#dish');
-        const card = document.querySelector('#dishcard');
-        const hint = document.querySelector('#hint');
+      <!--
+        TUNE THESE 3 VALUES FOR YOUR MODEL:
+        - scale: 1 unit = width of the menu image. Start at 0.3 and adjust.
+        - position z: lifts the dish off the paper.
+        - rotation: "90 0 0" stands the dish upright on a flat-lying menu.
+      -->
+      <!-- Zoom wrapper: pinch / +/- buttons change THIS entity's scale -->
+      <a-entity id="zoomer" scale="1 1 1">
+        <a-gltf-model
+          id="dish"
+          src="#dishModel"
+          scale="0.3 0.3 0.3"
+          position="0 0 0.05"
+          rotation="90 0 0"
+          animation="property: rotation; from: 90 0 0; to: 90 360 0; loop: true; dur: 12000; easing: linear"
+          animation__pop="property: scale; from: 0 0 0; to: 0.3 0.3 0.3; dur: 600; easing: easeOutBack; startEvents: targetFound">
+        </a-gltf-model>
+      </a-entity>
+    </a-entity>
+  </a-scene>
 
-        target.addEventListener('targetFound', () => {
-            dish.emit('targetFound');
-            card.classList.add('show');
-            hint.style.display = 'none';
-        });
-        target.addEventListener('targetLost', () => {
-            card.classList.remove('show');
-            hint.style.display = 'block';
-        });
-        document.querySelector('#orderBtn').addEventListener('click', () => alert('✅ Added to your order! (Demo)'));
-    </script>
+  <script>
+    const target = document.querySelector('#target0');
+    const dish   = document.querySelector('#dish');
+    const card   = document.querySelector('#dishcard');
+    const hint   = document.querySelector('#hint');
+
+    const zoomer   = document.querySelector('#zoomer');
+    const controls = document.querySelector('#zoomControls');
+    const zoomText = document.querySelector('#zoomLevel');
+
+    target.addEventListener('targetFound', () => {
+      dish.emit('targetFound');          // replay the "pop" animation
+      card.classList.add('show');
+      controls.classList.add('show');
+      hint.style.display = 'none';
+    });
+
+    target.addEventListener('targetLost', () => {
+      card.classList.remove('show');
+      controls.classList.remove('show');
+      hint.style.display = 'block';
+    });
+
+    /* ===== ZOOM ===== */
+    const MIN_ZOOM = 0.5, MAX_ZOOM = 3;   // limits: half size to 3x
+    let zoom = 1;
+
+    function setZoom(value) {
+      zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
+      zoomer.object3D.scale.set(zoom, zoom, zoom);
+      zoomText.textContent = zoom.toFixed(1) + 'x';
+    }
+
+    // +/- buttons
+    document.querySelector('#zoomIn').addEventListener('click',  () => setZoom(zoom + 0.25));
+    document.querySelector('#zoomOut').addEventListener('click', () => setZoom(zoom - 0.25));
+
+    // Pinch with two fingers
+    let startDist = 0, startZoom = 1;
+    const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+
+    document.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) { startDist = dist(e.touches); startZoom = zoom; }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && startDist > 0) {
+        e.preventDefault();               // stop the browser from zooming the page
+        setZoom(startZoom * (dist(e.touches) / startDist));
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) startDist = 0;
+    });
+
+    // Double-tap to reset zoom
+    let lastTap = 0;
+    document.addEventListener('touchend', (e) => {
+      if (e.target.closest('button')) return;
+      const now = Date.now();
+      if (now - lastTap < 300) setZoom(1);
+      lastTap = now;
+    });
+
+    document.querySelector('#orderBtn').addEventListener('click', () => {
+      alert('✅ Added to your order! (Demo)');
+    });
+  </script>
 </body>
-
 </html>
